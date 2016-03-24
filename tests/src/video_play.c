@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
    
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("v4l2src /dev/video0", NULL);
    
   /* Start playing */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
