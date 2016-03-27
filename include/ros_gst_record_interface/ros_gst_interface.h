@@ -1,9 +1,11 @@
 #ifndef GST_ROS_RECORD_INTERFACE_H_
 #define GST_ROS_RECORD_INTERFACE_H_
+
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <string.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 //extern "C" {
@@ -46,6 +48,11 @@ typedef struct Image_s {
   uint32_t channels;
   uint32_t bytes_per_pixel;
 } Image_t;
+
+typedef struct Buffer_s {
+  uint8_t *data;
+  uint32_t bytes;
+} Buffer_t;
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// Functions //////////////////////////////////
@@ -63,6 +70,9 @@ int32_t VideoRecorder_StartStream(VideoRecorder_t *vr);
 int32_t VideoRecorder_StopStream(VideoRecorder_t *vr);
 
 int32_t VideoRecorder_SubmitFrame(VideoRecorder_t *vr, Image_t *image);
+
+int32_t VideoRecorder_ReceiveOutStreamData(VideoRecorder_t *vr,
+  Buffer_t *buffer);
 #ifdef __cplusplus
 //}
 #endif
