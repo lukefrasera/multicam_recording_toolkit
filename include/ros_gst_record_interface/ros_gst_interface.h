@@ -75,6 +75,8 @@ int32_t VideoRecorder_SetInputFormat(VideoRecorder_t *vr, Format_t *format);
 
 int32_t VideoRecorder_SetOutputFormat(VideoRecorder_t *vr, Format_t *format);
 
+int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr);
+
 int32_t VideoRecorder_StartStream(VideoRecorder_t *vr);
 
 int32_t VideoRecorder_StopStream(VideoRecorder_t *vr);

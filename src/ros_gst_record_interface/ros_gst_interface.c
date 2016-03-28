@@ -54,11 +54,13 @@ int32_t VideoRecorder_Close(VideoRecorder_t *vr) {
 }
 
 
-int32_t VideoRecorder_SetInputFormat(VideoRecorder_t *vr, Format_t *format) {
+int32_t VideoRecorder_SetInputFormat(
+    VideoRecorder_t *vr, Format_t *format) {
   GstVideoInfo info;
   GstCaps *video_caps;
 
-  gst_video_info_set_format(&info, GST_VIDEO_FORMAT_RGB, format->width, format->height);
+  gst_video_info_set_format(&info,
+    GST_VIDEO_FORMAT_RGB, format->width, format->height);
   video_caps = gst_video_info_to_caps(&info);
   g_object_set(vr->app_source,
     "caps", video_caps,
@@ -71,7 +73,51 @@ int32_t VideoRecorder_SetInputFormat(VideoRecorder_t *vr, Format_t *format) {
   gst_caps_unref(video_caps);
 }
 
-int32_t VideoRecorder_SetOutputFormat(VideoRecorder_t *vr, Format_t *format) {}
+int32_t VideoRecorder_SetOutputFormat(
+    VideoRecorder_t *vr,
+    Format_t *format) {
+
+}
+void error_cb(GstBus *bus, GstMessage *msg, VideoRecorder_t * vr) {
+  GError *err;
+  gchar *debug_info;
+
+  gst_message_parse_error(msg, &err, &debug_info);
+  g_printerr("Error received from element %s: %s\n",
+    GST_OBJECT_NAME(msg->src), err->message);
+  g_printerr("Debugging information: %s\n",
+    debug_info ? debug_info : "none");
+  g_clear_error(&err);
+  g_free(debug_info);
+
+  g_main_loop_quit(vr->main_loop);
+}
+int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr) {
+  GstBus *bus;
+  gst_bin_add_many(GST_BIN(vr->pipeline),
+    vr->app_source,
+    vr->video_queue,
+    vr->audio_queue,
+    vr->matroska_muxer,
+    vr->app_sink,
+    NULL);
+
+  // Link Pipeline together
+  if (gst_element_link_many(
+      vr->app_source,
+      vr->video_queue,
+      vr->matroska_muxer,
+      vr->app_sink, NULL) != TRUE) {
+    g_printerr("Elements could not be linked!\n");
+    gst_object_unref(vr->pipeline);
+  }
+
+  bus = gst_element_get_bus(vr->pipeline);
+  gst_bus_add_signal_watch(bus);
+  g_signal_connect(G_OBJECT(bus),
+    "message::error",
+    (GCallback)error_cb, vr);
+}
 
 int32_t VideoRecorder_StartStream(VideoRecorder_t *vr) {}
 
