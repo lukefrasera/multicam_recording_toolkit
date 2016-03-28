@@ -1,3 +1,32 @@
 cmake_minimum_required(VERSION 2.8.4)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 add_subdirectory(tests)
+
+
+# Adding Executable in main build directory
+find_package(GStreamer REQUIRED COMPONENTS
+        gstreamer-video
+        gstreamer-audio)
+
+
+include_directories(include
+        ${GSTREAMER_INCLUDE_DIRS}
+        ${GSTREAMER_AUDIO_INCLUDE_DIRS}
+        ${GSTREAMER_VIDEO_INCLUDE_DIRS}
+        ${GLIB_INCLUDE_DIRS})
+
+add_library(ros_gst_interface
+        src/ros_gst_record_interface/ros_gst_interface.c)
+
+target_link_libraries(ros_gst_interface
+        ${GSTREAMER_LIBRARIES}
+        ${GSTREAMER_AUDIO_LIBRARIES}
+        ${GSTREAMER_VIDEO_LIBRARIES}
+        ${GLIB_LIBRARIES}
+        ${GLIB_GOBJECT_LIBRARIES})
+
+add_executable(interface_test
+        src/test_c_interface.c)
+
+target_link_libraries(interface_test
+        ros_gst_interface)

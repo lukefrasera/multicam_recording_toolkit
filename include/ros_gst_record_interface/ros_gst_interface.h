@@ -39,7 +39,8 @@ typedef struct _VideoRecorder_s {
 
 
 typedef struct Format_s {
-  int fmt;
+  uint32_t width, height;
+  float frame_rate;
 } Format_t;
 
 typedef struct Image_s {
@@ -59,9 +60,11 @@ typedef struct Buffer_s {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-int32_t VideoRecorder_Init(VideoRecorder_t *vr);
+int32_t VideoRecorder_Init(VideoRecorder_t *vr, int argc, char *argv[]);
 
-int32_t VideoeRcorder_SetInputFormat(VideoRecorder_t *vr, Format_t *format);
+int32_t VideoRecorder_Close(VideoRecorder_t *vr);
+
+int32_t VideoRecorder_SetInputFormat(VideoRecorder_t *vr, Format_t *format);
 
 int32_t VideoRecorder_SetOutputFormat(VideoRecorder_t *vr, Format_t *format);
 
