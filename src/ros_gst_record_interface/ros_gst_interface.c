@@ -97,7 +97,6 @@ int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr) {
   gst_bin_add_many(GST_BIN(vr->pipeline),
     vr->app_source,
     vr->video_queue,
-    vr->audio_queue,
     vr->matroska_muxer,
     vr->app_sink,
     NULL);
@@ -107,7 +106,7 @@ int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr) {
       vr->app_source,
       vr->video_queue,
       vr->matroska_muxer,
-      vr->app_sink, NULL) != TRUE) {
+      NULL) != TRUE) {
     g_printerr("Elements could not be linked!\n");
     gst_object_unref(vr->pipeline);
   }

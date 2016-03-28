@@ -18,17 +18,6 @@ typedef struct Queue_s {
   uint32_t buffer_size;
 } Queue_t;
 
-void Queue_New(Queue_t *queue, uint32_t size, uint32_t buffer_size);
-
-void Queue_Free(Queue_t *queue);
-
-void Queue_Push(Queue_t *queue, uint8_t *data);
-
-void Queue_PopCopy(Queue_t *queue, uint8_t *data);
-
-void Queue_PopPointer(Queue_t *queue, uint8_t **data);
-
-
 typedef struct _VideoRecorder_s {
   GstElement *pipeline;
   GstElement *app_source;
@@ -66,6 +55,15 @@ typedef struct Buffer_s {
 /////////////////////////////////// Functions //////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+void Queue_New(Queue_t *queue, uint32_t size, uint32_t buffer_size);
+
+void Queue_Free(Queue_t *queue);
+
+void Queue_Push(Queue_t *queue, uint8_t *data);
+
+void Queue_PopCopy(Queue_t *queue, uint8_t *data);
+
+void Queue_PopPointer(Queue_t *queue, uint8_t **data);
 
 int32_t VideoRecorder_Init(VideoRecorder_t *vr, int argc, char *argv[]);
 
