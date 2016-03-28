@@ -11,17 +11,22 @@
 //extern "C" {
 #endif
 // Setup interface objects
-typedef struct _CustomData {
-  GstElement *pipeline, *app_source, *tee, *audio_queue, *audio_convert1, *audio_resample, *audio_sink;
-  GstElement *video_queue, *audio_convert2, *visual, *video_convert, *video_sink;
-  GstElement *app_queue, *app_sink;
-  
-  guint64 num_samples;   /* Number of samples generated so far (for timestamp generation) */
-  
-  guint sourceid;        /* To control the GSource */
-  
-  GMainLoop *main_loop;  /* GLib's Main Loop */
-} CustomData;
+typedef struct Queue_s {
+  uint8_t **queue;
+  uint8_t *read, *front;
+  uint32_t size;
+  uint32_t buffer_size;
+} Queue_t;
+
+void Queue_New(Queue_t *queue, uint32_t size, uint32_t buffer_size);
+
+void Queue_Free(Queue_t *queue);
+
+void Queue_Push(Queue_t *queue, uint8_t *data);
+
+void Queue_PopCopy(Queue_t *queue, uint8_t *data);
+
+void Queue_PopPointer(Queue_t *queue, uint8_t **data);
 
 
 typedef struct _VideoRecorder_s {
@@ -32,6 +37,8 @@ typedef struct _VideoRecorder_s {
   GstElement *matroska_muxer;
   GstElement *app_sink;
   uint64_t num_samples;
+
+  Queue_t image_queue;
 
   guint sourceid;
   GMainLoop *main_loop;
