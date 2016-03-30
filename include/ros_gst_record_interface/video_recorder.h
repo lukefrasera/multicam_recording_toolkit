@@ -1,12 +1,13 @@
 #ifndef VIDEO_RECORDER_H_
 #define VIDEO_RECORDER_H_
 #include <stdin.h>
+#include "ros_gst_record_interface/ros_gst_interface.h"
 
 namespace gst_ros {
 class VideoRecorder {
  public:
-  GstRecorder();
-  ~GstRecorder();
+  VideoRecorder();
+  ~VideoRecorder();
 
   int32_t InitializeRecording();
   int32_t SetInputVideoFormat();
@@ -18,7 +19,7 @@ class VideoRecorder {
   int32_t SubmitFrame();
  
  private:
-
+  VideoRecorder_t *vr;
 };
 }  // namespace gst_ros
 

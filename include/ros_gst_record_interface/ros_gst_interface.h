@@ -28,6 +28,10 @@ void Queue_PopCopy(Queue_t *queue, uint8_t *data);
 
 void Queue_PopPointer(Queue_t *queue, uint8_t **data);
 
+typedef struct Format_s {
+  uint32_t width, height;
+  float frame_rate;
+} Format_t;
 
 typedef struct _VideoRecorder_s {
   GstElement *pipeline;
@@ -37,6 +41,9 @@ typedef struct _VideoRecorder_s {
   GstElement *matroska_muxer;
   GstElement *app_sink;
   uint64_t num_samples;
+  uint64_t frame_num;
+  GstClock *time;
+  Format_t format;
 
   Queue_t image_queue;
 
@@ -45,10 +52,6 @@ typedef struct _VideoRecorder_s {
 } VideoRecorder_t;
 
 
-typedef struct Format_s {
-  uint32_t width, height;
-  float frame_rate;
-} Format_t;
 
 typedef struct Image_s {
   uint8_t *data;

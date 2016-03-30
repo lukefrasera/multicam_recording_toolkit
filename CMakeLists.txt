@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 2.8.4)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 add_subdirectory(tests)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Adding Executable in main build directory
 find_package(GStreamer REQUIRED COMPONENTS
         gstreamer-video
         gstreamer-audio)
 
+find_package(GLIB REQUIRED COMPONENTS
+  gobject
+  gmodule
+)
 
 include_directories(include
         ${GSTREAMER_INCLUDE_DIRS}
