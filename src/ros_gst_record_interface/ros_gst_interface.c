@@ -58,15 +58,15 @@ int32_t VideoRecorder_Init(VideoRecorder_t *vr, int argc, char *argv[]) {
   gst_init(&argc, &argv);
   memset(vr, 0, sizeof(VideoRecorder_t));
   vr->time = gst_system_clock_obtain();
-  vr->app_source = gst_element_factory_make("appsrc", "video_source");
-  vr->video_queue = gst_element_factory_make("queue", "video_queue");
+  vr->app_source     = gst_element_factory_make("appsrc", "video_source");
+  vr->video_queue    = gst_element_factory_make("queue", "video_queue");
   vr->matroska_muxer = gst_element_factory_make("matroskamux", "muxer");
-  vr->app_sink = gst_element_factory_make("appsink", "app_sink");
+  vr->app_sink       = gst_element_factory_make("appsink", "app_sink");
   
   vr->pipeline = gst_pipeline_new("pipe_line");
   
-  if (!vr->app_source ||
-      !vr->video_queue ||
+  if (!vr->app_source     ||
+      !vr->video_queue    ||
       !vr->matroska_muxer ||
       !vr->app_sink) {
     g_printerr("Not all elements could be created.\n");
@@ -116,9 +116,16 @@ int32_t VideoRecorder_SetInputFormat(
     NULL);
 
   // Request Matroska Mux Sinks
-  pad_template = gst_element_class_get_pad_template(GST_ELEMENT_GET_CLASS(vr->matroska_muxer), "video_%u");
-  matroska_video_pad = gst_element_request_pad(vr->matroska_muxer, pad_template, NULL, video_caps);
-  g_print ("Obtained request pad [%s] video pipeline.\n", gst_pad_get_name(matroska_video_pad));
+  pad_template       = gst_element_class_get_pad_template(
+      GST_ELEMENT_GET_CLASS(vr->matroska_muxer),
+      "video_%u");
+  matroska_video_pad = gst_element_request_pad(
+      vr->matroska_muxer,
+      pad_template,
+      NULL,
+      video_caps);
+  g_print ("Obtained request pad [%s] video pipeline.\n",
+      gst_pad_get_name(matroska_video_pad));
 
   // Link Video pad with Video queue src
   video_queue_pad = gst_element_get_static_pad (vr->video_queue, "src");
@@ -244,6 +251,7 @@ int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr) {
       NULL) != TRUE) {
     g_printerr("Elements could not be linked!\n");
     gst_object_unref(vr->pipeline);
+    return -1;
   }
 
   bus = gst_element_get_bus(vr->pipeline);

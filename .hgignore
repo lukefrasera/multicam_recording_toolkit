@@ -1,4 +1,6 @@
-syntax glob:
+syntax: glob
 
 build/
 .idea/
+*.pyc
+*.swp
