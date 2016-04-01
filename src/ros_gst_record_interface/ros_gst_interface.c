@@ -1,11 +1,14 @@
 #include "ros_gst_record_interface/ros_gst_interface.h"
+#include "stdio.h"
+#include "stdlib.h"
 
 #define CHUNK_SIZE 1024
 
 static gboolean VideoRecorder_PushData(VideoRecorder_t *vr) {
   GstBuffer *buffer;
   GstMemory *memory;
-  uint64_t size = vr->format.width * vr->format.height * 3;
+  uint64_t size = CHUNK_SIZE;
+  //uint64_t size = vr->format.width * vr->format.height * 3;
   GstFlowReturn flow_return;
 
   buffer = gst_buffer_new();
@@ -29,7 +32,8 @@ static gboolean VideoRecorder_PushData(VideoRecorder_t *vr) {
   }
   return 1;
 }
-static void VideoRecorder_StartFeed(GstElement *source, VideoRecorder_t *vr) {
+
+static void VideoRecorder_StartFeed(GstElement *source, guint size, VideoRecorder_t *vr) {
   if (vr->sourceid == 0) {
     g_print("Start Feeding\n");
     vr->sourceid = g_idle_add((GSourceFunc)VideoRecorder_PushData, vr);
@@ -73,6 +77,7 @@ int32_t VideoRecorder_Init(VideoRecorder_t *vr, int argc, char *argv[]) {
     return -1;
   }
 
+  g_object_set (vr->app_source,"format", GST_FORMAT_TIME, NULL);
   g_signal_connect(vr->app_source,
     "need-data",
     G_CALLBACK(VideoRecorder_StartFeed),
@@ -141,31 +146,6 @@ int32_t VideoRecorder_SetInputFormat(
   return 1;
 }
 
-static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
-  GstPad *pad = NULL;
-  GstCaps *caps = NULL;
-   
-  /* Retrieve pad */
-  pad = gst_element_get_static_pad (element, pad_name);
-  if (!pad) {
-    g_printerr ("Could not retrieve pad '%s'\n", pad_name);
-    return;
-  }
-   
-  /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
-  //caps = gst_pad_get_negotiated_caps (pad);
-  caps = gst_pad_get_allowed_caps(pad);
-  //if (!caps)
-  //  caps = gst_pad_get_caps_reffed (pad);
-   
-  /* Print and free */
-  g_print ("Caps for the %s pad:\n", pad_name);
-  //print_caps (caps, "      ");
-  GST_LOG("caps are %" GST_PTR_FORMAT, caps);
-  gst_caps_unref (caps);
-  gst_object_unref (pad);
-}
-
 /* Prints information about a Pad Template, including its Capabilities */
 static void print_pad_templates_information (GstElementFactory * factory) {
   const GList *pads;
@@ -218,6 +198,24 @@ int32_t VideoRecorder_SetOutputFormat(
   //gst_video_info_set_format(&info, 
   factory = gst_element_factory_find("matroskamux");
   print_pad_templates_information(factory);
+
+  video_caps = gst_caps_new_simple("video/x-matroska",
+    "framerate", GST_TYPE_FRACTION, 30, 1, NULL);
+
+  g_object_set(vr->app_sink,
+      "caps", video_caps,
+      NULL);
+
+
+  if (gst_element_link_many(
+      vr->matroska_muxer,
+      vr->app_sink,
+      NULL) != TRUE) {
+    g_printerr("Elements could not be linked!\n");
+    gst_object_unref(vr->pipeline);
+    return -1;
+  }
+
   return 1;
 }
 void error_cb(GstBus *bus, GstMessage *msg, VideoRecorder_t * vr) {
@@ -248,6 +246,7 @@ int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr) {
       vr->app_source,
       vr->video_queue,
       vr->matroska_muxer,
+      vr->app_sink,
       NULL) != TRUE) {
     g_printerr("Elements could not be linked!\n");
     gst_object_unref(vr->pipeline);
