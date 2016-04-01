@@ -6,7 +6,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # Adding Executable in main build directory
 find_package(GStreamer REQUIRED COMPONENTS
         gstreamer-video
-        gstreamer-audio)
+        gstreamer-audio
+        gstreamer-app)
 
 find_package(GLIB REQUIRED COMPONENTS
   gobject
@@ -17,6 +18,7 @@ include_directories(include
         ${GSTREAMER_INCLUDE_DIRS}
         ${GSTREAMER_AUDIO_INCLUDE_DIRS}
         ${GSTREAMER_VIDEO_INCLUDE_DIRS}
+        ${GSTREAMER_APP_INCLUDE_DIRS}
         ${GLIB_INCLUDE_DIRS})
 
 add_library(ros_gst_interface
@@ -27,7 +29,8 @@ target_link_libraries(ros_gst_interface
         ${GSTREAMER_AUDIO_LIBRARIES}
         ${GSTREAMER_VIDEO_LIBRARIES}
         ${GLIB_LIBRARIES}
-        ${GLIB_GOBJECT_LIBRARIES})
+        ${GLIB_GOBJECT_LIBRARIES}
+        ${GSTREAMER_APP_LIBRARIES})
 
 add_executable(interface_test
         src/test_c_interface.c)
