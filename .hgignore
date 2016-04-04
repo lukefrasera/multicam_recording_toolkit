@@ -1,6 +1,7 @@
 syntax: glob
 
 build/
+build_debug/
 .idea/
 *.pyc
 *.swp

@@ -4,7 +4,7 @@ add_subdirectory(tests)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Adding Executable in main build directory
-find_package(GStreamer REQUIRED COMPONENTS
+find_package(GStreamer 1.0 REQUIRED COMPONENTS
         gstreamer-video
         gstreamer-audio
         gstreamer-app)
