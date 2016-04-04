@@ -19,8 +19,7 @@ static gboolean VideoRecorder_PushData(VideoRecorder_t *vr) {
 
   gst_buffer_insert_memory(buffer, -1, memory);
   // Set its timestamp and duration
-  GST_BUFFER_DTS(buffer) = gst_clock_get_time(vr->time);
-  GST_BUFFER_PTS(buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_PTS(buffer) = gst_clock_get_time(vr->time);
   GST_BUFFER_OFFSET(buffer) = vr->frame_num;
   vr->frame_num++;
   
@@ -28,7 +27,7 @@ static gboolean VideoRecorder_PushData(VideoRecorder_t *vr) {
   // Push buffer into appsrc
   g_signal_emit_by_name(vr->app_source, "push-buffer", buffer, &flow_return);
   //gst_app_src_push_buffer((GstAppSrc*)vr->app_source, buffer);
-  g_print("Adding Data to the appsrc queue\n");
+  // g_print("Adding Data to the appsrc queue\n");
   gst_buffer_unref(buffer);
   if (flow_return != GST_FLOW_OK) {
     return -1;
@@ -58,6 +57,8 @@ static void VideoRecorder_SampleFeed(GstElement *sink, VideoRecorder_t *vr) {
   if (sample) {
     g_print("*");
     gst_sample_unref(sample);
+  } else {
+    g_print("~");
   }
 }
 
@@ -66,14 +67,13 @@ int32_t VideoRecorder_Init(VideoRecorder_t *vr, int argc, char *argv[]) {
   memset(vr, 0, sizeof(VideoRecorder_t));
   vr->time = gst_system_clock_obtain();
   vr->app_source     = gst_element_factory_make("appsrc", "video_source");
-  vr->video_queue    = gst_element_factory_make("queue", "video_queue");
+  // vr->video_queue    = gst_element_factory_make("queue", "video_queue");
   vr->matroska_muxer = gst_element_factory_make("matroskamux", "muxer");
   vr->app_sink       = gst_element_factory_make("appsink", "app_sink");
   
   vr->pipeline = gst_pipeline_new("pipe_line");
   
   if (!vr->app_source     ||
-      !vr->video_queue    ||
       !vr->matroska_muxer ||
       !vr->app_sink) {
     g_printerr("Not all elements could be created.\n");
@@ -106,17 +106,13 @@ int32_t VideoRecorder_Close(VideoRecorder_t *vr) {
 
 int32_t VideoRecorder_SetInputFormat(
     VideoRecorder_t *vr, Format_t *format) {
-  GstVideoInfo info;
   GstCaps *video_caps;
   GstPadTemplate *pad_template;
   GstPad * matroska_video_pad;
   GstPad *video_queue_pad;
-  
-  memcpy(&vr->format, format, sizeof(Format_t));
 
-  gst_video_info_set_format(&info,
-    GST_VIDEO_FORMAT_RGB, format->width, format->height);
-  //video_caps = gst_video_info_to_caps(&info);
+  
+
   video_caps = gst_caps_new_simple("video/x-raw",
     "format", G_TYPE_STRING, "RGB",
     "width", G_TYPE_INT, 640,
@@ -128,23 +124,22 @@ int32_t VideoRecorder_SetInputFormat(
     "caps", video_caps,
     "format", GST_FORMAT_TIME,
     NULL);
-  //g_object_set(vr->app_sink,
-  //  "emit-signals", TRUE,
-  //  "caps", video_caps,
-  //  NULL);
+  g_object_set(vr->matroska_muxer,
+   "streamable", TRUE,
+   NULL);
 
   // Request Matroska Mux Sinks
   pad_template       = gst_element_class_get_pad_template(
-      GST_ELEMENT_GET_CLASS(vr->matroska_muxer),
-      "video_%u");
+    GST_ELEMENT_GET_CLASS(vr->matroska_muxer),
+    "video_%u");
   matroska_video_pad = gst_element_request_pad(
-      vr->matroska_muxer,
-      pad_template,
-      NULL,
-      video_caps);
+    vr->matroska_muxer,
+    pad_template,
+    NULL,
+    video_caps);
   g_print ("Obtained request pad [%s] video pipeline.\n",
-      gst_pad_get_name(matroska_video_pad));
-
+    gst_pad_get_name(matroska_video_pad));
+  
   // Link Video pad with Video queue src
   video_queue_pad = gst_element_get_static_pad (vr->app_source, "src");
   if (gst_pad_link(video_queue_pad, matroska_video_pad) != GST_PAD_LINK_OK) {
@@ -156,6 +151,7 @@ int32_t VideoRecorder_SetInputFormat(
   gst_object_unref(video_queue_pad);
   
   gst_caps_unref(video_caps);
+
   return 1;
 }
 
@@ -239,7 +235,6 @@ int32_t VideoRecorder_SetOutputFormat(
     gst_object_unref(vr->pipeline);
     return -1;
   }
-
   return 1;
 }
 void error_cb(GstBus *bus, GstMessage *msg, VideoRecorder_t * vr) {
@@ -258,27 +253,28 @@ void error_cb(GstBus *bus, GstMessage *msg, VideoRecorder_t * vr) {
 }
 int32_t VideoRecorder_InitPipeline(VideoRecorder_t *vr) {
   GstBus *bus;
+
   gst_bin_add_many(GST_BIN(vr->pipeline),
     vr->app_source,
-    vr->video_queue,
     vr->matroska_muxer,
     vr->app_sink,
     NULL);
 
   // Link Pipeline together
-  if (gst_element_link(
-      vr->app_source,
-      vr->matroska_muxer) != TRUE) {
-    g_printerr("Elements could not be linked!\n");
-    gst_object_unref(vr->pipeline);
-    return -1;
-  }
+  // if (gst_element_link(
+  //     vr->app_source,
+  //     vr->matroska_muxer) != TRUE) {
+  //   g_printerr("Elements could not be linked!\n");
+  //   gst_object_unref(vr->pipeline);
+  //   return -1;
+  // }
 
   bus = gst_element_get_bus(vr->pipeline);
   gst_bus_add_signal_watch(bus);
   g_signal_connect(G_OBJECT(bus),
     "message::error",
     (GCallback)error_cb, vr);
+
   return 1;
 }
 
@@ -288,14 +284,6 @@ int32_t VideoRecorder_StartStream(VideoRecorder_t *vr) {
   vr->main_loop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(vr->main_loop);
   
-  // Try to pull a sample from the appsink
-  sample = gst_app_sink_pull_sample((GstAppSink*)vr->app_sink);
-  g_print("Received Sample!\n");
-  if (sample) {
-
-    g_print("Sample is real\n");
-    gst_sample_unref(sample);
-  }
   return 1;
 }
 

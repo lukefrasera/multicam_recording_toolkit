@@ -9,9 +9,9 @@ int main(int argc, char *argv[]) {
   format.height = 480;
   format.frame_rate = 30;
   VideoRecorder_Init(recorder, argc, argv);
+  VideoRecorder_InitPipeline(recorder);
   VideoRecorder_SetInputFormat(recorder, &format);
   VideoRecorder_SetOutputFormat(recorder, &format);
-  VideoRecorder_InitPipeline(recorder);
   VideoRecorder_StartStream(recorder);
   VideoRecorder_Close(recorder);
   return 0;
